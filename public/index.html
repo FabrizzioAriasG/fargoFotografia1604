@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fargo Fotografía - Recuerdos</title>
+  <style>
+    /* Reset y básicos */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffffcc;
+      backdrop-filter: blur(10px);
+      border-radius: 25px;
+      padding: 40px 30px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 30px;
+    }
+
+    .filebox input[type="file"] {
+      width: 100%;
+      padding: 20px;
+      border: 2px dashed #8ef08e;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: border-color 0.3s, background 0.3s;
+      background: #f9f9f9;
+    }
+
+    .filebox input[type="file"]:hover {
+      border-color: #5bd05b;
+      background: #f0fff0;
+    }
+
+    .row {
+      margin-top: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    input.eventId {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+
+    input.eventId:focus {
+      border-color: #8ef08e;
+      box-shadow: 0 0 8px rgba(142, 240, 142, 0.5);
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      background: #8ef08e;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #5bd05b;
+      transform: translateY(-3px);
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 15px;
+      color: #444;
+      min-height: 20px;
+    }
+
+    .preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .preview img {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid #e5e7eb;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .preview img:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    }
+
+    .filebox {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+}
+
+.filebox input[type="file"] {
+  display: none; /* Oculta el input real */
+}
+
+.filebox::before {
+  content: 'Elegir archivos';
+  display: inline-block;
+  width: 30%;
+  padding: 16px;
+  background: linear-gradient(135deg, #facc15, #f97316); /* degradado amarillo-naranja */
+  border-radius: 25px;
+  text-align: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.filebox:hover::before {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+}
+
+    
+
+    /* Responsive */
+    @media (max-width: 500px) {
+      .card {
+        padding: 30px 20px;
+      }
+
+      h1 { font-size: 28px; }
+      h2 { font-size: 18px; }
+      p { font-size: 14px; }
+      .preview img { width: 70px; height: 70px; }
+    }
+
+    @media (max-width: 360px) {
+      .filebox input[type="file"] { padding: 16px; }
+      button { padding: 14px; font-size: 16px; }
+    }
+    
+  </style>
+</head>
+<body>
+
+  <main class="card">
+    <h2>Fargo Fotografía - Recuerdos</h2>
+    <h1>Subir fotos</h1>
+    <p>(Máximo 5 fotos)</p>
+
+    <form id="form">
+      <label class="filebox">
+        <input type="file" id="fotos" name="fotos" accept="image/*" multiple />
+      </label>
+
+      <div class="row">
+        <input id="eventId" class="eventId" placeholder="ID del evento (opcional)" />
+        <button id="sendBtn" type="submit">Enviar</button>
+      </div>
+
+      <div id="preview" class="preview" aria-hidden="false"></div>
+      <div id="status" class="status"></div>
+    </form>
+  </main>
+
+  <script src="./pages/script.js"></script>
+</body>
+</html>
