@@ -42,7 +42,7 @@ app.post("/api/subir", upload.array("fotos", 5), async (req, res) => {
 
     await resend.emails.send({
       from: "Fotos <onboarding@resend.dev>",
-      to: "erick160411@gmail.com",
+      to: "fargofotografia16@gmail.com",
       subject: `Fotos del evento: ${id}`,
       text: "Acá van las fotos.",
       attachments,
