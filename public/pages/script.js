@@ -90,7 +90,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error(err);
-      statusDiv.textContent = "❌ Falló la subida, revisá la consola.";
+      statusDiv.textContent = "❌ Falló la subida.";
     } finally {
       if (sendBtn) {
         sendBtn.disabled = false;
