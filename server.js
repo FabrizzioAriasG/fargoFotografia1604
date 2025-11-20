@@ -1,79 +1,79 @@
 import express from "express";
 import multer from "multer";
 import fs from "fs";
-import dotenv from "dotenv";
+import cors from "cors";
 import { Resend } from "resend";
-import open from "open";
-
+import dotenv from "dotenv";
 dotenv.config();
 
+console.log("API KEY CARGADA:", process.env.RESEND_API_KEY ? "sí" : "no");
+
+
 const app = express();
-// Limites y filtro: 5 MB por archivo, aceptar solo imágenes
-const upload = multer({
-  dest: "uploads/",
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB por archivo
-  fileFilter: (req, file, cb) => {
-    if (file && file.mimetype && file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Solo se permiten archivos de imagen."), false);
+app.use(cors());
+app.use(express.json());
+// Log de peticiones para debugging
+app.use((req, res, next) => {
+  console.log(new Date().toISOString(), req.method, req.url);
+  next();
+});
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Configuración de multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
   }
 });
 
-// Verificar API key
-const resendKey = process.env.RESEND_API_KEY;
-if (!resendKey) throw new Error("❌ Falta la API key de Resend en .env");
+const upload = multer({ storage });
 
-const resend = new Resend(resendKey);
-
-app.use(express.json());
-
-// POST endpoint para subir fotos
-app.post("/api/subir", upload.array("fotos", 5), async (req, res) => {
-  const files = req.files;
-  const id = req.query.id || "evento_sin_id";
-
-  if (!files || files.length === 0)
-    return res.status(400).json({ error: "No se enviaron fotos." });
-
+// Endpoint
+// Aceptar uploads sin depender del nombre del campo (frontend usa `fotos`)
+app.post("/api/subir", upload.any(), async (req, res) => {
   try {
-    // Preparar attachments como Buffer (Resend acepta buffers mejor que base64 crudo)
+    const { nombre, correo, telefono, mensaje } = req.body;
+    const files = req.files || [];
+
+    // Adjuntos correctos para Resend
     const attachments = files.map(f => ({
       filename: f.originalname,
-      data: fs.readFileSync(f.path),
-      contentType: f.mimetype,
+      content: fs.readFileSync(f.path),
+      type: f.mimetype
     }));
 
-    await resend.emails.send({
-      from: "Fotos <onboarding@resend.dev>",
+    const response = await resend.emails.send({
+      from: "Fargo Fotografía <onboarding@resend.dev>",
       to: "fargofotografia16@gmail.com",
-      subject: `Fotos del evento: ${id}`,
-      text: "Fotos adjuntas.",
-      attachments,
+      subject: "Fotos.",
+      html: `
+        <h2>Fotos del evento ${req.query.id || ""}</h2>
+      `,
+      attachments
     });
 
-    res.json({ ok: true });
-  } catch (err) {
-    console.error("Error enviando email:", err);
-    const message = err && (err.message || (err.error && err.error.message)) ? (err.message || err.error.message) : "No se pudo enviar el mail.";
-    res.status(500).json({ error: message });
-  } finally {
-    // Intentar limpiar los archivos subidos aunque falle el envío
-    if (files && files.length) {
-      for (const f of files) {
-        try { fs.unlinkSync(f.path); } catch (e) { console.warn(`No se pudo borrar ${f.path}:`, e.message); }
-      }
-    }
+    console.log("Respuesta Resend:", response);
+
+    res.json({ ok: true, response });
+  } catch (error) {
+    console.error("Error al enviar:", error);
+    res.status(500).json({ ok: false, error });
   }
 });
 
-// Servir frontend
+// Servir los archivos estáticos (front-end)
 app.use(express.static("public"));
 
-// Iniciar servidor y abrir navegador
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  // Abrir navegador solo en entorno de desarrollo/local
-  if (process.env.NODE_ENV !== 'production') {
-    try { open(`http://localhost:${PORT}`); } catch (e) { /* ignore on servers */ }
-  }
+// Handler 404 simple
+app.use((req, res) => {
+  res.status(404).send(`No encontrado: ${req.url}`);
 });
+
+app.listen(3000, () => {
+  console.log("Servidor corriendo en http://localhost:3000");
+});
+ 
