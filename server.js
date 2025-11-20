@@ -35,25 +35,33 @@ app.post("/api/subir", upload.array("fotos", 5), async (req, res) => {
     return res.status(400).json({ error: "No se enviaron fotos." });
 
   try {
+    // Preparar attachments como Buffer (Resend acepta buffers mejor que base64 crudo)
     const attachments = files.map(f => ({
       filename: f.originalname,
-      content: fs.readFileSync(f.path, { encoding: "base64" }),
+      data: fs.readFileSync(f.path),
+      contentType: f.mimetype,
     }));
 
     await resend.emails.send({
       from: "Fotos <onboarding@resend.dev>",
       to: "fargofotografia16@gmail.com",
       subject: `Fotos del evento: ${id}`,
-      text: "Fotos.",
+      text: "Fotos adjuntas.",
       attachments,
     });
 
-    files.forEach(f => fs.unlinkSync(f.path));
-
     res.json({ ok: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "No se pudo enviar el mail." });
+    console.error("Error enviando email:", err);
+    const message = err && (err.message || (err.error && err.error.message)) ? (err.message || err.error.message) : "No se pudo enviar el mail.";
+    res.status(500).json({ error: message });
+  } finally {
+    // Intentar limpiar los archivos subidos aunque falle el envío
+    if (files && files.length) {
+      for (const f of files) {
+        try { fs.unlinkSync(f.path); } catch (e) { console.warn(`No se pudo borrar ${f.path}:`, e.message); }
+      }
+    }
   }
 });
 
