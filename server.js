@@ -43,7 +43,7 @@ app.post("/api/subir", upload.any(), async (req, res) => {
     }));
 
     const response = await resend.emails.send({
-      from: "Fargo Fotografía <fargofotografia.onrender.com>",
+      from: "Fargo Fotografía <no-reply@fargofotografia.onrender.com>",
       to: "fargofotografia16@gmail.com",
       subject: "Fotos.",
       html: `
